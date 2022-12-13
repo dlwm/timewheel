@@ -9,6 +9,7 @@ import (
 
 // Job 延时任务回调函数
 type Job func(interface{})
+
 // TaskData 回调函数参数类型
 
 // TimeWheel 时间轮
@@ -28,10 +29,11 @@ type TimeWheel struct {
 
 // Task 延时任务
 type Task struct {
+	loop   bool          // 是否循环
 	delay  time.Duration // 延迟时间
-	circle int           // 时间轮需要转动几圈
+	circle int           // 本次时间轮剩余几圈
 	key    interface{}   // 定时器唯一标识, 用于删除定时器
-	data   interface{}      // 回调函数参数
+	data   interface{}   // 回调函数参数
 }
 
 // New 创建时间轮
@@ -75,11 +77,11 @@ func (tw *TimeWheel) Stop() {
 }
 
 // AddTimer 添加定时器 key为定时器唯一标识
-func (tw *TimeWheel) AddTimer(delay time.Duration, key interface{}, data interface{}) {
+func (tw *TimeWheel) AddTimer(loop bool, delay time.Duration, key interface{}, data interface{}) {
 	if delay < 0 {
 		return
 	}
-	tw.addTaskChannel <- Task{delay: delay, key: key, data: data}
+	tw.addTaskChannel <- Task{loop: loop, delay: delay, key: key, data: data}
 }
 
 // RemoveTimer 删除定时器 key为添加定时器时传递的定时器唯一标识
@@ -126,11 +128,15 @@ func (tw *TimeWheel) scanAndRunTask(l *list.List) {
 			continue
 		}
 
-		go tw.job(task.data)
 		next := e.Next()
-		l.Remove(e)
-		if task.key != nil {
-			delete(tw.timer, task.key)
+		go tw.job(task.data)
+		if !task.loop {
+			l.Remove(e)
+			if task.key != nil {
+				delete(tw.timer, task.key)
+			}
+		} else {
+			tw.addTask(task)
 		}
 		e = next
 	}
