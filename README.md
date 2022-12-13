@@ -11,7 +11,7 @@ Golang实现的时间轮
 # 安装
 
 ```shell
-go get -u github.com/ouqiang/timewheel
+go get -u github.com/dlwm/timewheel
 ```
 
 # 使用
@@ -21,7 +21,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/ouqiang/timewheel"
+	"github.com/dlwm/timewheel"
 	"time"
 )
 
