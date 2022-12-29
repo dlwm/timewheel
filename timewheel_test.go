@@ -3,6 +3,7 @@ package timewheel
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -47,4 +48,26 @@ func TestTimeWheel(t *testing.T) {
 	//fmt.Println("继续")
 
 	time.Sleep(30 * time.Second)
+}
+
+func TestHighConcurrent(t *testing.T) {
+	tw := New(time.Second, 3600, func(i interface{}) error {
+		if (rand.Intn(6)) != 0 {
+			fmt.Println("!")
+			return errors.New("xxx")
+		}
+		fmt.Println("~")
+		return nil
+	})
+
+	tw.Start()
+
+	for i := 0; i < 10000; i++ {
+		fmt.Println(i)
+		go func() {
+			tw.AddTimer(true, time.Second, time.Now().Unix(), "xxx")
+		}()
+	}
+
+	time.Sleep(time.Minute)
 }
