@@ -8,7 +8,8 @@ import (
 // @author qiang.ou<qingqianludao@gmail.com>
 
 // Job 延时任务回调函数
-type Job func(interface{})
+// 返回参数非空时，自动删除循环任务
+type Job func(interface{}) error
 
 // TaskData 回调函数参数类型
 
@@ -129,15 +130,21 @@ func (tw *TimeWheel) scanAndRunTask(l *list.List) {
 		}
 
 		next := e.Next()
-		go tw.job(task.data)
+
+		go func() {
+			if tw.job(task.data) != nil {
+				tw.removeTask(task.key)
+			}
+		}()
+
 		if !task.loop {
-			l.Remove(e)
 			if task.key != nil {
 				delete(tw.timer, task.key)
 			}
 		} else {
 			tw.addTask(task)
 		}
+		l.Remove(e)
 		e = next
 	}
 }

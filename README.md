@@ -30,8 +30,9 @@ func main() {
 	// 第一个参数为tick刻度，即时间轮多久转动一次，最小为1秒，跨度1秒
 	// 第二个参数为时间轮槽slot数量，即每轮有多少个记录点
 	// 第三个参数为回调函数
-	tw := timewheel.New(1*time.Second, 3600, func(i interface{}) {
+	tw := timewheel.New(1*time.Second, 3600, func(i interface{}) error {
 		fmt.Println(i)
+		return nil
 	})
 
 	// 开启时间轮
@@ -57,5 +58,3 @@ func main() {
 	select {}
 }
 ```
-
-# 添加
